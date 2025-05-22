@@ -76,13 +76,44 @@ void stop() {
     }
 }
 
+#define AMOUNT_OF_LEDS 12
+
+uint8_t led_buffer[AMOUNT_OF_LEDS * 3] = {0};
+
+static void leds_off(){
+    ESP_LOGI(TAG, "Turning off all LEDs");
+    for (uint8_t i = 0; i < AMOUNT_OF_LEDS; i++) {
+        led_buffer[3 * i + 0] = 0;
+        led_buffer[3 * i + 1] = 0;
+        led_buffer[3 * i + 2] = 0;
+    }
+    ws2812_send_data(led_buffer, sizeof(led_buffer));
+}
+
+static void led_set(uint8_t led, uint8_t r, uint8_t g, uint8_t b) {
+    if (led >= AMOUNT_OF_LEDS) return;
+    led_buffer[3 * led + 0] = g;
+    led_buffer[3 * led + 1] = r;
+    led_buffer[3 * led + 2] = b;
+
+    ws2812_send_data(led_buffer, sizeof(led_buffer));
+}
+
+static void sao_leds_test() {
+    ESP_LOGI(TAG, "SAO LEDs test");
+    leds_off();
+    ESP_LOGI(TAG, "All LEDS off");
+    
+    led_set(9, 0xFF, 0x00, 0x00);
+    led_set(10, 0x00, 0xFF, 0x00);
+    led_set(11, 0x00, 0x00, 0xFF);
+}
+
 const char* fatal_error_str = "A fatal error occured";
 const char* reset_board_str = "Reset the board to try again";
 
 static xSemaphoreHandle boot_mutex;
 static xSemaphoreHandle ntp_mutex;
-
-#define AMOUNT_OF_LEDS 12
 
 static void boot_animation_task(void* pvParameters) {
     display_boot_animation();
@@ -119,7 +150,6 @@ static void audio_player_task(void* pvParameters) {
         ws2812_send_data(leds, sizeof(leds));
         vTaskDelay(pdMS_TO_TICKS(10));
     }
-
     vTaskDelete(NULL);
 }
 
@@ -169,8 +199,7 @@ _Noreturn void app_main(void) {
 
     /* Initialize the LEDs */
     ws2812_init(GPIO_LED_DATA, 150);
-    const uint8_t led_off[15] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    ws2812_send_data(led_off, sizeof(led_off));
+    leds_off();
 
     /* Enable the amplifier */
     PCA9555* io_expander = get_io_expander();
@@ -327,6 +356,9 @@ _Noreturn void app_main(void) {
 
     /* Wait for boot animation to complete */
     wait_for_boot_anim();
+
+    // Jeff hack
+    sao_leds_test();
 
     ESP_LOGW(TAG, "done");
 
