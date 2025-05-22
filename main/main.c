@@ -82,7 +82,7 @@ const char* reset_board_str = "Reset the board to try again";
 static xSemaphoreHandle boot_mutex;
 static xSemaphoreHandle ntp_mutex;
 
-#define AMOUNT_OF_LEDS 9
+#define AMOUNT_OF_LEDS 12
 
 static void boot_animation_task(void* pvParameters) {
     display_boot_animation();
