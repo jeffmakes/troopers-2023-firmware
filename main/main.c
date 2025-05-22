@@ -99,7 +99,43 @@ static void led_set(uint8_t led, uint8_t r, uint8_t g, uint8_t b) {
     ws2812_send_data(led_buffer, sizeof(led_buffer));
 }
 
-static void sao_leds_test() {
+// HSV to RGB conversion helper
+static void hsv_to_rgb(float h, float s, float v, uint8_t *r, uint8_t *g, uint8_t *b) {
+    float c = v * s;
+    float x = c * (1.0f - fabsf(fmodf(h / 60.0f, 2) - 1));
+    float m = v - c;
+    float r1, g1, b1;
+
+    if (h < 60) {
+        r1 = c; g1 = x; b1 = 0;
+    } else if (h < 120) {
+        r1 = x; g1 = c; b1 = 0;
+    } else if (h < 180) {
+        r1 = 0; g1 = c; b1 = x;
+    } else if (h < 240) {
+        r1 = 0; g1 = x; b1 = c;
+    } else if (h < 300) {
+        r1 = x; g1 = 0; b1 = c;
+    } else {
+        r1 = c; g1 = 0; b1 = x;
+    }
+
+    *r = (uint8_t)((r1 + m) * 255.0f);
+    *g = (uint8_t)((g1 + m) * 255.0f);
+    *b = (uint8_t)((b1 + m) * 255.0f);
+}
+
+// Set HSV color for a specific LED
+static void led_set_hsv(uint8_t led, float h, float s, float v) {
+    uint8_t r, g, b;
+    if (h < 0) h += 360;
+    if (h >= 360) h -= 360;
+
+    hsv_to_rgb(h, s, v, &r, &g, &b);
+    led_set(led, r, g, b);
+}
+
+static void sao_leds_test(void* pvParameters) {
     ESP_LOGI(TAG, "SAO LEDs test");
     leds_off();
     ESP_LOGI(TAG, "All LEDS off");
@@ -107,6 +143,37 @@ static void sao_leds_test() {
     led_set(9, 0xFF, 0x00, 0x00);
     led_set(10, 0x00, 0xFF, 0x00);
     led_set(11, 0x00, 0x00, 0xFF);
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
+    ESP_LOGI(TAG, "All LEDS on");
+    
+    for (uint8_t i = 0; i < AMOUNT_OF_LEDS; i++) {
+        led_set_hsv(i, (i * 360.0f) / AMOUNT_OF_LEDS, 1.0f, 1.0f);
+        vTaskDelay(pdMS_TO_TICKS(100));
+    } 
+
+    vTaskDelay(pdMS_TO_TICKS(1000));
+
+    while(true){
+        for (float h = 0; h < 360; h += 1.0f) {
+            led_set_hsv(0, h + 0, 1.0f, 1.0f);
+            led_set_hsv(1, h + 10, 1.0f, 1.0f);
+            led_set_hsv(2, h + 20, 1.0f, 1.0f);
+            led_set_hsv(11, h + 30, 1.0f, 1.0f);
+            led_set_hsv(10, h + 40, 1.0f, 1.0f);
+            led_set_hsv(9, h + 50, 1.0f, 1.0f);
+            led_set_hsv(3, h + 60, 1.0f, 1.0f);
+            led_set_hsv(4, h + 70, 1.0f, 1.0f);
+            led_set_hsv(5, h + 80, 1.0f, 1.0f);
+            led_set_hsv(6, h + 90, 1.0f, 1.0f);
+            led_set_hsv(7, h + 100, 1.0f, 1.0f);
+            led_set_hsv(8, h + 110, 1.0f, 1.0f);
+                
+            vTaskDelay(pdMS_TO_TICKS(1));
+        }
+    }
+
+    vTaskDelete(NULL);
 }
 
 const char* fatal_error_str = "A fatal error occured";
@@ -358,7 +425,8 @@ _Noreturn void app_main(void) {
     wait_for_boot_anim();
 
     // Jeff hack
-    sao_leds_test();
+    //sao_leds_test();
+    xTaskCreate(sao_leds_test, "sao_leds_test", 4096, NULL, 12, NULL);
 
     ESP_LOGW(TAG, "done");
 
