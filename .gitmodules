@@ -48,3 +48,6 @@
 [submodule "components/i2c-ktd2052"]
 	path = components/i2c-ktd2052
 	url = git@github.com:hnzlmnn/esp32-component-ktd2052.git
+[submodule "apps/troopers23-esp32-app-gnuboy"]
+	path = apps/troopers23-esp32-app-gnuboy
+	url = git@github.com:hnzlmnn/troopers23-esp32-app-gnuboy.git
