@@ -99,38 +99,29 @@ static void led_set(uint8_t led, uint8_t r, uint8_t g, uint8_t b) {
     ws2812_send_data(led_buffer, sizeof(led_buffer));
 }
 
-// HSV to RGB conversion helper
-static void hsv_to_rgb(float h, float s, float v, uint8_t *r, uint8_t *g, uint8_t *b) {
-    float c = v * s;
-    float x = c * (1.0f - fabsf(fmodf(h / 60.0f, 2) - 1));
-    float m = v - c;
-    float r1, g1, b1;
+// Convert HSV (h: 0–359, s/v: 0–255) to RGB (0–255)
+static void hsv_to_rgb(uint16_t h, uint8_t s, uint8_t v, uint8_t *r, uint8_t *g, uint8_t *b) {
+    uint8_t region = h / 60;
+    uint16_t remainder = (h % 60) * 255 / 60; // scale remainder to 0–255
 
-    if (h < 60) {
-        r1 = c; g1 = x; b1 = 0;
-    } else if (h < 120) {
-        r1 = x; g1 = c; b1 = 0;
-    } else if (h < 180) {
-        r1 = 0; g1 = c; b1 = x;
-    } else if (h < 240) {
-        r1 = 0; g1 = x; b1 = c;
-    } else if (h < 300) {
-        r1 = x; g1 = 0; b1 = c;
-    } else {
-        r1 = c; g1 = 0; b1 = x;
+    uint16_t p = (v * (255 - s)) / 255;
+    uint16_t q = (v * (255 - (s * remainder) / 255)) / 255;
+    uint16_t t = (v * (255 - (s * (255 - remainder)) / 255)) / 255;
+
+    switch (region) {
+        case 0: *r = v; *g = t; *b = p; break;
+        case 1: *r = q; *g = v; *b = p; break;
+        case 2: *r = p; *g = v; *b = t; break;
+        case 3: *r = p; *g = q; *b = v; break;
+        case 4: *r = t; *g = p; *b = v; break;
+        default: *r = v; *g = p; *b = q; break;
     }
-
-    *r = (uint8_t)((r1 + m) * 255.0f);
-    *g = (uint8_t)((g1 + m) * 255.0f);
-    *b = (uint8_t)((b1 + m) * 255.0f);
 }
 
-// Set HSV color for a specific LED
-static void led_set_hsv(uint8_t led, float h, float s, float v) {
+static void led_set_hsv(uint8_t led, uint16_t h, uint8_t s, uint8_t v) {
     uint8_t r, g, b;
-    if (h < 0) h += 360;
-    if (h >= 360) h -= 360;
 
+    h = h % 360; // wrap hue to 0–359
     hsv_to_rgb(h, s, v, &r, &g, &b);
     led_set(led, r, g, b);
 }
@@ -148,30 +139,31 @@ static void sao_leds_test(void* pvParameters) {
     ESP_LOGI(TAG, "All LEDS on");
     
     for (uint8_t i = 0; i < AMOUNT_OF_LEDS; i++) {
-        led_set_hsv(i, (i * 360.0f) / AMOUNT_OF_LEDS, 1.0f, 1.0f);
+        led_set_hsv(i, (i * 360) / AMOUNT_OF_LEDS, 255, 255);
         vTaskDelay(pdMS_TO_TICKS(100));
     } 
 
     vTaskDelay(pdMS_TO_TICKS(1000));
 
-    while(true){
-        for (float h = 0; h < 360; h += 1.0f) {
-            led_set_hsv(0, h + 0, 1.0f, 1.0f);
-            led_set_hsv(1, h + 10, 1.0f, 1.0f);
-            led_set_hsv(2, h + 20, 1.0f, 1.0f);
-            led_set_hsv(11, h + 30, 1.0f, 1.0f);
-            led_set_hsv(10, h + 40, 1.0f, 1.0f);
-            led_set_hsv(9, h + 50, 1.0f, 1.0f);
-            led_set_hsv(3, h + 60, 1.0f, 1.0f);
-            led_set_hsv(4, h + 70, 1.0f, 1.0f);
-            led_set_hsv(5, h + 80, 1.0f, 1.0f);
-            led_set_hsv(6, h + 90, 1.0f, 1.0f);
-            led_set_hsv(7, h + 100, 1.0f, 1.0f);
-            led_set_hsv(8, h + 110, 1.0f, 1.0f);
-                
+    while (true) {
+        for (uint16_t h = 0; h < 360; h++) {
+            led_set_hsv(0,  (h +   0) % 360, 255, 255);
+            led_set_hsv(1,  (h +  10) % 360, 255, 255);
+            led_set_hsv(2,  (h +  20) % 360, 255, 255);
+            led_set_hsv(11, (h +  30) % 360, 255, 255);
+            led_set_hsv(10, (h +  40) % 360, 255, 255);
+            led_set_hsv(9,  (h +  50) % 360, 255, 255);
+            led_set_hsv(3,  (h +  60) % 360, 255, 255);
+            led_set_hsv(4,  (h +  70) % 360, 255, 255);
+            led_set_hsv(5,  (h +  80) % 360, 255, 255);
+            led_set_hsv(6,  (h +  90) % 360, 255, 255);
+            led_set_hsv(7,  (h + 100) % 360, 255, 255);
+            led_set_hsv(8,  (h + 110) % 360, 255, 255);
+
             vTaskDelay(pdMS_TO_TICKS(1));
         }
     }
+
 
     vTaskDelete(NULL);
 }
