@@ -23,32 +23,16 @@ void sao_leds_test(void* pvParameters) {
     led_set(10, 0x00, 0xFF, 0x00);
     led_set(11, 0x00, 0x00, 0xFF);
 
-    vTaskDelay(pdMS_TO_TICKS(1000));
-    ESP_LOGI(TAG, "All LEDS on");
-    
-    for (uint8_t i = 0; i < AMOUNT_OF_LEDS; i++) {
-        led_set_hsv(i, (i * 360) / AMOUNT_OF_LEDS, 255, 255);
-        vTaskDelay(pdMS_TO_TICKS(100));
-    } 
 
     vTaskDelay(pdMS_TO_TICKS(1000));
 
     while (true) {
         for (uint16_t h = 0; h < 360; h++) {
-            led_set_hsv(0,  (h +   0) % 360, 255, 255);
-            led_set_hsv(1,  (h +  10) % 360, 255, 255);
-            led_set_hsv(2,  (h +  20) % 360, 255, 255);
-            led_set_hsv(11, (h +  30) % 360, 255, 255);
-            led_set_hsv(10, (h +  40) % 360, 255, 255);
-            led_set_hsv(9,  (h +  50) % 360, 255, 255);
-            led_set_hsv(3,  (h +  60) % 360, 255, 255);
-            led_set_hsv(4,  (h +  70) % 360, 255, 255);
-            led_set_hsv(5,  (h +  80) % 360, 255, 255);
-            led_set_hsv(6,  (h +  90) % 360, 255, 255);
-            led_set_hsv(7,  (h + 100) % 360, 255, 255);
-            led_set_hsv(8,  (h + 110) % 360, 255, 255);
-
-            vTaskDelay(pdMS_TO_TICKS(10));
+            led_set_hsv(12,  (h +   0) % 360, 255, 255);
+            led_set_hsv(11,  (h +  10) % 360, 255, 255);
+            led_set_hsv(10,  (h +  20) % 360, 255, 255);
+            led_set_hsv(9, (h +  30) % 360, 255, 255);
+            vTaskDelay(pdMS_TO_TICKS(50));
         }
     }
 
