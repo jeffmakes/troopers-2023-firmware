@@ -19,6 +19,7 @@
 #include "pax_gfx.h"
 #include "sao.h"
 #include "settings.h"
+#include "sao_leds.h"
 
 extern const uint8_t dev_png_start[] asm("_binary_dev_png_start");
 extern const uint8_t dev_png_end[] asm("_binary_dev_png_end");
@@ -29,7 +30,8 @@ typedef enum action {
     ACTION_FILE_BROWSER,
     ACTION_FILE_BROWSER_INT,
     ACTION_BUTTON_TEST,
-    ACTION_SAO
+    ACTION_SAO,
+    ACTION_SAO_LEDS
 } menu_dev_action_t;
 
 static void render_help(pax_buf_t* pax_buffer) {
@@ -62,6 +64,7 @@ void menu_dev(xQueueHandle button_queue) {
     menu_insert_item(menu, "File browser (internal)", NULL, (void*) ACTION_FILE_BROWSER_INT, -1);
     menu_insert_item(menu, "Button test", NULL, (void*) ACTION_BUTTON_TEST, -1);
     menu_insert_item(menu, "SAO EEPROM tool", NULL, (void*) ACTION_SAO, -1);
+    menu_insert_item(menu, "SAO LEDs test", NULL, (void*) ACTION_SAO_LEDS, -1);
 
     bool              render = true;
     menu_dev_action_t action = ACTION_NONE;
@@ -118,6 +121,8 @@ void menu_dev(xQueueHandle button_queue) {
                 test_buttons(button_queue);
             } else if (action == ACTION_SAO) {
                 menu_sao(button_queue);
+            } else if (action == ACTION_SAO_LEDS) {
+                menu_sao_leds(button_queue); 
             } else if (action == ACTION_BACK) {
                 break;
             }
