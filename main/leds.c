@@ -19,7 +19,6 @@ void leds_off(){
 }
 
 void led_set(uint8_t led, uint8_t r, uint8_t g, uint8_t b) {
-    if (led >= AMOUNT_OF_LEDS) return;
     led_buffer[3 * led + 0] = g;
     led_buffer[3 * led + 1] = r;
     led_buffer[3 * led + 2] = b;
